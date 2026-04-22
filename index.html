@@ -155,7 +155,41 @@ body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f8
 .info-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 .info-table th{background:#f5f0e8;padding:8px 10px;text-align:left;border:1px solid #e0d8cc;font-size:11px;color:#555;width:30%}
 .info-table td{padding:8px 10px;border:1px solid #e0d8cc;font-size:13px}
-@media print{.back-btn{display:none}.section{break-inside:avoid}}
+/* PDF 저장 버튼 스타일 */
+.report-toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.tbtn{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;transition:all .2s;border:none}
+.tbtn-back{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.4)!important;color:#c9a84c}
+.tbtn-pdf{background:linear-gradient(135deg,#c0392b,#96281b);color:#fff;box-shadow:0 2px 8px rgba(192,57,43,.3)}
+.tbtn-share{background:linear-gradient(135deg,#2d6a4f,#1b4332);color:#fff;box-shadow:0 2px 8px rgba(45,106,79,.3)}
+.tbtn-copy{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;box-shadow:0 2px 8px rgba(21,101,192,.3)}
+.tbtn:hover{opacity:.85;transform:translateY(-1px)}
+/* 공유 모달 */
+#share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center}
+#share-modal.open{display:flex}
+.share-box{background:#fff;border-radius:16px;padding:28px;width:340px;max-width:92vw;text-align:center}
+.share-box h3{font-size:17px;font-weight:700;color:#1a0a3d;margin-bottom:6px}
+.share-box p{font-size:13px;color:#666;margin-bottom:20px}
+.share-options{display:flex;flex-direction:column;gap:10px}
+.share-opt{padding:13px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;border:none;font-family:inherit;transition:all .2s}
+.share-opt:hover{opacity:.85}
+.sopt-html{background:linear-gradient(135deg,#1a0a3d,#2d1b69);color:#f0d080}
+.sopt-txt{background:linear-gradient(135deg,#2d6a4f,#1b4332);color:#fff}
+.sopt-close{background:#f0ebe0;color:#555;margin-top:4px}
+/* toast */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a0a3d;color:#f0d080;padding:12px 24px;border-radius:30px;font-size:14px;opacity:0;transition:all .35s;z-index:10000;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* 인쇄(PDF) 전용 스타일 */
+@media print{
+  #pg-intro,#pg-loading{display:none!important}
+  #pg-report{display:block!important}
+  .report-toolbar{display:none!important}
+  #share-modal,#toast{display:none!important}
+  body{background:#fff!important}
+  .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:12px}
+  .section{break-inside:avoid;box-shadow:none;border:1px solid #e0d8cc}
+  .dark-card,.ast-card,.tl-body.active,.year-card.cur{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:15mm 12mm;size:A4}
+}
 @media(max-width:600px){.date-row{grid-template-columns:1fr 1fr}.ptable{font-size:11px}.stem-txt{font-size:22px}.branch-txt{font-size:18px}.month-grid{grid-template-columns:repeat(2,1fr)}.rel-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -250,11 +284,32 @@ body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f8
 
 <div id="pg-report" style="display:none">
   <div style="max-width:920px;margin:0 auto;padding:20px 16px">
-    <button class="back-btn" id="back-btn-main">← 처음으로 돌아가기</button>
+    <div class="report-toolbar">
+      <button class="tbtn tbtn-back" id="back-btn-main">← 처음으로</button>
+      <button class="tbtn tbtn-pdf" id="pdf-btn-main">🖨 PDF로 저장</button>
+      <button class="tbtn tbtn-share" id="share-btn-main">📤 리포트 공유</button>
+      <button class="tbtn tbtn-copy" id="copy-btn-main">📋 요약 복사</button>
+    </div>
     <div id="report-body"></div>
     <div style="text-align:center;padding:30px 0;color:#aaa;font-size:12px">✦ 대만신 사주 연구원 | 입춘 절기 기준 · 정밀 만세력 · 서양 점성술 융합 ✦</div>
   </div>
 </div>
+
+<!-- 공유 모달 -->
+<div id="share-modal">
+  <div class="share-box">
+    <h3>📤 리포트 공유하기</h3>
+    <p>아래 방법으로 사주 리포트를<br>다른 사람과 나눌 수 있어요</p>
+    <div class="share-options">
+      <button class="share-opt sopt-html" id="sopt-html">💾 HTML 파일로 저장<br><small style="font-weight:400;opacity:.8">리포트를 완전한 파일로 다운로드</small></button>
+      <button class="share-opt sopt-txt" id="sopt-txt">📝 텍스트 요약 복사<br><small style="font-weight:400;opacity:.8">사주 핵심 정보를 클립보드에 복사</small></button>
+      <button class="share-opt sopt-close" id="sopt-close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 알림 -->
+<div id="toast"></div>
 
 <script>
 var LUNAR_DATA = {"1930":{"start":[1930,1,30],"months":[29,30,30,29,29,30,29,29,30,29,30,30,29],"leap":6},"1931":{"start":[1931,2,17],"months":[30,30,30,29,29,30,29,29,30,29,30,29],"leap":0},"1932":{"start":[1932,2,6],"months":[30,30,30,29,30,29,30,29,29,30,29,30],"leap":0},"1933":{"start":[1933,1,26],"months":[29,30,30,29,30,30,29,30,29,30,29,29,30],"leap":5},"1934":{"start":[1934,2,14],"months":[29,30,29,30,30,29,30,30,29,30,29,30],"leap":0},"1935":{"start":[1935,2,4],"months":[29,29,30,29,30,29,30,30,29,30,30,29],"leap":0},"1936":{"start":[1936,1,24],"months":[30,29,29,30,29,30,29,30,29,30,30,30,29],"leap":3},"1937":{"start":[1937,2,11],"months":[30,29,29,30,29,29,30,29,30,30,30,29],"leap":0},"1938":{"start":[1938,1,31],"months":[30,30,29,29,30,29,29,30,29,30,30,29,30],"leap":7},"1939":{"start":[1939,2,19],"months":[30,30,29,29,30,29,29,30,29,30,29,30],"leap":0},"1940":{"start":[1940,2,8],"months":[30,30,29,30,29,30,29,29,30,29,30,29],"leap":0},"1941":{"start":[1941,1,27],"months":[30,30,29,30,30,29,30,29,29,30,29,30,29],"leap":6},"1942":{"start":[1942,2,15],"months":[30,29,30,30,29,30,30,29,30,29,29,30],"leap":0},"1943":{"start":[1943,2,5],"months":[29,30,29,30,29,30,30,29,30,30,29,30],"leap":0},"1944":{"start":[1944,1,26],"months":[29,29,30,29,30,29,30,29,30,30,29,30,30],"leap":4},"1945":{"start":[1945,2,13],"months":[29,29,30,29,29,30,29,30,30,30,29,30],"leap":0},"1946":{"start":[1946,2,2],"months":[30,29,29,30,29,29,30,29,30,30,29,30],"leap":0},"1947":{"start":[1947,1,22],"months":[30,30,29,29,30,29,29,30,29,30,29,30,30],"leap":2},"1948":{"start":[1948,2,10],"months":[30,29,30,29,30,29,29,30,29,30,29,30],"leap":0},"1949":{"start":[1949,1,29],"months":[30,30,29,30,29,30,29,29,30,29,30,29,30],"leap":7},"1950":{"start":[1950,2,17],"months":[30,29,30,30,29,30,29,29,30,29,30,29],"leap":0},"1951":{"start":[1951,2,6],"months":[30,29,30,30,29,30,29,30,29,30,29,30],"leap":0},"1952":{"start":[1952,1,27],"months":[29,30,29,30,29,30,30,29,30,29,30,29,30],"leap":5},"1953":{"start":[1953,2,14],"months":[29,30,29,29,30,30,29,30,30,29,30,30],"leap":0},"1954":{"start":[1954,2,4],"months":[29,29,30,29,29,30,29,30,30,29,30,30],"leap":0},"1955":{"start":[1955,1,24],"months":[30,29,29,30,29,29,30,29,30,29,30,30,30],"leap":3},"1956":{"start":[1956,2,12],"months":[29,30,29,30,29,29,30,29,30,29,30,30],"leap":0},"1957":{"start":[1957,1,31],"months":[30,29,30,29,30,29,29,30,29,30,29,30,30],"leap":8},"1958":{"start":[1958,2,19],"months":[29,30,30,29,30,29,29,30,29,30,29,30],"leap":0},"1959":{"start":[1959,2,8],"months":[29,30,30,29,30,29,30,29,30,29,30,29],"leap":0},"1960":{"start":[1960,1,28],"months":[30,29,30,29,30,30,29,30,29,30,29,30,29],"leap":6},"1961":{"start":[1961,2,15],"months":[30,29,30,29,30,29,30,30,29,30,29,30],"leap":0},"1962":{"start":[1962,2,5],"months":[29,30,29,29,30,29,30,30,29,30,30,29],"leap":0},"1963":{"start":[1963,1,25],"months":[30,29,30,29,29,30,29,30,29,30,30,30,29],"leap":4},"1964":{"start":[1964,2,13],"months":[30,29,30,29,29,30,29,30,29,30,30,30],"leap":0},"1965":{"start":[1965,2,2],"months":[29,30,29,30,29,29,30,29,29,30,30,30],"leap":0},"1966":{"start":[1966,1,22],"months":[29,30,30,29,30,29,29,30,29,29,30,30,29],"leap":3},"1967":{"start":[1967,2,9],"months":[30,30,29,30,30,29,29,30,29,30,29,30],"leap":0},"1968":{"start":[1968,1,30],"months":[29,30,30,29,30,29,30,29,30,29,30,29,30],"leap":7},"1969":{"start":[1969,2,17],"months":[29,30,29,30,29,30,30,29,30,29,30,29],"leap":0},"1970":{"start":[1970,2,6],"months":[30,29,29,30,30,29,30,29,30,30,29,30],"leap":0},"1971":{"start":[1971,1,27],"months":[29,30,29,29,30,29,30,29,30,30,30,29,30],"leap":5},"1972":{"start":[1972,2,15],"months":[29,30,29,29,30,29,30,29,30,30,30,29],"leap":0},"1973":{"start":[1973,2,3],"months":[30,29,30,29,29,30,29,29,30,30,30,29],"leap":0},"1974":{"start":[1974,1,23],"months":[30,30,29,30,29,29,30,29,29,30,30,29,30],"leap":4},"1975":{"start":[1975,2,11],"months":[30,30,29,30,29,29,30,29,29,30,29,30],"leap":0},"1976":{"start":[1976,1,31],"months":[30,30,29,30,29,30,29,30,29,30,29,29,30],"leap":8},"1977":{"start":[1977,2,18],"months":[30,29,30,30,29,30,29,30,29,30,29,29],"leap":0},"1978":{"start":[1978,2,7],"months":[30,30,29,30,29,30,30,29,30,29,30,29],"leap":0},"1979":{"start":[1979,1,28],"months":[30,29,29,30,29,30,30,29,30,30,29,30,29],"leap":6},"1980":{"start":[1980,2,16],"months":[30,29,29,30,29,30,29,30,30,29,30,30],"leap":0},"1981":{"start":[1981,2,5],"months":[29,30,29,29,30,29,29,30,30,29,30,30],"leap":0},"1982":{"start":[1982,1,25],"months":[30,29,30,29,29,30,29,29,30,30,29,30,30],"leap":4},"1983":{"start":[1983,2,13],"months":[30,29,30,29,29,30,29,29,30,29,30,30],"leap":0},"1984":{"start":[1984,2,2],"months":[30,29,30,30,29,29,30,29,29,30,29,30,30],"leap":10},"1985":{"start":[1985,2,20],"months":[29,30,30,29,30,29,30,29,29,30,29,30],"leap":0},"1986":{"start":[1986,2,9],"months":[29,30,30,29,30,30,29,30,29,30,29,29],"leap":0},"1987":{"start":[1987,1,29],"months":[30,29,30,30,29,30,29,30,30,29,30,29,30],"leap":6},"1988":{"start":[1988,2,18],"months":[29,29,30,29,30,29,30,30,29,30,30,29],"leap":0},"1989":{"start":[1989,2,6],"months":[30,29,29,30,29,30,29,30,30,29,30,30],"leap":0},"1990":{"start":[1990,1,27],"months":[29,30,29,29,30,29,29,30,30,29,30,30,30],"leap":5},"1991":{"start":[1991,2,15],"months":[29,30,29,29,30,29,29,30,29,30,30,30],"leap":0},"1992":{"start":[1992,2,4],"months":[29,30,30,29,29,30,29,29,30,29,30,30],"leap":0},"1993":{"start":[1993,1,23],"months":[29,30,30,29,30,29,30,29,29,30,29,30,29],"leap":3},"1994":{"start":[1994,2,10],"months":[30,30,30,29,30,29,30,29,29,30,29,30],"leap":0},"1995":{"start":[1995,1,31],"months":[29,30,30,29,30,30,29,30,29,30,29,29,30],"leap":8},"1996":{"start":[1996,2,19],"months":[29,30,29,30,30,29,30,29,30,30,29,30],"leap":0},"1997":{"start":[1997,2,8],"months":[29,29,30,29,30,29,30,30,29,30,30,29],"leap":0},"1998":{"start":[1998,1,28],"months":[30,29,29,30,29,29,30,30,29,30,30,30,29],"leap":5},"1999":{"start":[1999,2,16],"months":[30,29,29,30,29,29,30,29,30,30,30,29],"leap":0},"2000":{"start":[2000,2,5],"months":[30,30,29,29,30,29,29,30,29,30,30,29],"leap":0},"2001":{"start":[2001,1,24],"months":[30,30,30,29,29,30,29,29,30,29,30,29,30],"leap":4},"2002":{"start":[2002,2,12],"months":[30,30,29,30,29,30,29,29,30,29,30,29],"leap":0},"2003":{"start":[2003,2,1],"months":[30,30,29,30,30,29,30,29,29,30,29,30],"leap":0},"2004":{"start":[2004,1,22],"months":[29,30,29,30,30,29,30,29,30,29,30,29,30],"leap":2},"2005":{"start":[2005,2,9],"months":[29,30,29,30,29,30,30,29,30,30,29,29],"leap":0},"2006":{"start":[2006,1,29],"months":[30,29,30,29,30,29,30,29,30,30,29,30,30],"leap":7},"2007":{"start":[2007,2,18],"months":[29,29,30,29,29,30,29,30,30,30,29,30],"leap":0},"2008":{"start":[2008,2,7],"months":[30,29,29,30,29,29,30,29,30,30,29,30],"leap":0},"2009":{"start":[2009,1,26],"months":[30,30,29,29,30,29,29,30,29,30,29,30,30],"leap":5},"2010":{"start":[2010,2,14],"months":[30,29,30,29,30,29,29,30,29,30,29,30],"leap":0},"2011":{"start":[2011,2,3],"months":[30,29,30,30,29,30,29,29,30,29,30,29],"leap":0},"2012":{"start":[2012,1,23],"months":[30,29,30,30,30,29,30,29,29,30,29,30,29],"leap":3},"2013":{"start":[2013,2,10],"months":[30,29,30,30,29,30,29,30,29,30,29,30],"leap":0},"2014":{"start":[2014,1,31],"months":[29,30,29,30,29,30,29,30,30,29,30,29,30],"leap":9},"2015":{"start":[2015,2,19],"months":[29,30,29,29,30,29,30,30,30,29,30,29],"leap":0},"2016":{"start":[2016,2,8],"months":[30,29,30,29,29,30,29,30,30,29,30,30],"leap":0},"2017":{"start":[2017,1,28],"months":[29,30,29,30,29,29,30,29,30,29,30,30,30],"leap":5},"2018":{"start":[2018,2,16],"months":[29,30,29,30,29,29,30,29,30,29,30,30],"leap":0},"2019":{"start":[2019,2,5],"months":[30,29,30,29,30,29,29,30,29,30,29,30],"leap":0},"2020":{"start":[2020,1,25],"months":[30,29,30,30,29,30,29,29,30,29,30,29,30],"leap":4},"2021":{"start":[2021,2,12],"months":[29,30,30,29,30,29,30,29,30,29,30,29],"leap":0},"2022":{"start":[2022,2,1],"months":[30,29,30,29,30,30,29,30,29,30,29,30],"leap":0},"2023":{"start":[2023,1,22],"months":[29,30,29,30,29,30,29,30,30,29,30,29,30],"leap":2},"2024":{"start":[2024,2,10],"months":[29,30,29,29,30,29,30,30,29,30,30,29],"leap":0},"2025":{"start":[2025,1,29],"months":[30,29,30,29,29,30,29,30,29,30,30,30,29],"leap":6},"2026":{"start":[2026,2,17],"months":[30,29,30,29,29,30,29,30,29,30,30,30],"leap":0},"2027":{"start":[2027,2,7],"months":[29,30,29,30,29,29,30,29,29,30,30,30],"leap":0},"2028":{"start":[2028,1,27],"months":[29,30,30,29,30,29,29,30,29,29,30,30,29],"leap":5},"2029":{"start":[2029,2,13],"months":[30,30,29,30,30,29,29,30,29,29,30,30],"leap":0},"2030":{"start":[2030,2,3],"months":[29,30,29,30,30,29,30,29,30,29,30,29],"leap":0}}
@@ -297,12 +352,161 @@ function attachEventListeners() {
   // 뒤로가기 버튼
   var backBtn = document.getElementById('back-btn-main');
   if(backBtn) backBtn.addEventListener('click', goBack);
+
+  // PDF 저장 버튼
+  var pdfBtn = document.getElementById('pdf-btn-main');
+  if(pdfBtn) pdfBtn.addEventListener('click', savePDF);
+
+  // 공유하기 버튼
+  var shareBtn = document.getElementById('share-btn-main');
+  if(shareBtn) shareBtn.addEventListener('click', openShareModal);
+
+  // 요약 복사 버튼
+  var copyBtn = document.getElementById('copy-btn-main');
+  if(copyBtn) copyBtn.addEventListener('click', copySummary);
+
+  // 모달 내부 버튼들
+  var soptHtml = document.getElementById('sopt-html');
+  var soptTxt  = document.getElementById('sopt-txt');
+  var soptClose= document.getElementById('sopt-close');
+  if(soptHtml)  soptHtml.addEventListener('click', downloadReportHTML);
+  if(soptTxt)   soptTxt.addEventListener('click',  function(){ closeShareModal(); copySummary(); });
+  if(soptClose) soptClose.addEventListener('click', closeShareModal);
+
+  // 모달 외부 클릭 시 닫기
+  var modal = document.getElementById('share-modal');
+  if(modal) modal.addEventListener('click', function(e){ if(e.target === modal) closeShareModal(); });
 }
 
 if(document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', attachEventListeners);
 } else {
   attachEventListeners();
+}
+
+// ================================================
+//  PDF 저장
+// ================================================
+function savePDF() {
+  showToast('🖨 인쇄 창이 열립니다. "PDF로 저장"을 선택하세요');
+  setTimeout(function(){ window.print(); }, 400);
+}
+
+// ================================================
+//  공유 모달
+// ================================================
+function openShareModal() {
+  document.getElementById('share-modal').classList.add('open');
+}
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+// ================================================
+//  HTML 리포트 파일 다운로드
+// ================================================
+function downloadReportHTML() {
+  closeShareModal();
+  if(!currentInput) { showToast('❌ 먼저 사주 분석을 실행해 주세요'); return; }
+  var inp = currentInput;
+  var reportDiv = document.getElementById('report-body');
+  if(!reportDiv || !reportDiv.innerHTML.trim()) { showToast('❌ 리포트가 없습니다'); return; }
+
+  var dateStr = inp.year + '년 ' + inp.month + '월 ' + inp.day + '일';
+  var html = '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + inp.name + ' 사주팔자 리포트 — 대만신</title>\n<style>\n';
+
+  // 현재 페이지의 스타일 복사
+  var styles = document.querySelectorAll('style');
+  for(var i=0;i<styles.length;i++){ html += styles[i].innerHTML + '\n'; }
+
+  html += '#pg-intro,#pg-loading,#share-modal,#toast,.report-toolbar{display:none!important}\n';
+  html += '#pg-report{display:block!important}\n';
+  html += 'body{background:#f8f6f0}\n';
+  html += '</style>\n</head>\n<body>\n';
+  html += '<div id="pg-report" style="display:block">\n';
+  html += '<div style="max-width:920px;margin:0 auto;padding:20px 16px">\n';
+  html += reportDiv.innerHTML;
+  html += '\n<div style="text-align:center;padding:30px 0;color:#aaa;font-size:12px">✦ 대만신 사주 연구원 | 입춘 절기 기준 · 정밀 만세력 · 서양 점성술 융합 ✦</div>\n';
+  html += '</div>\n</div>\n</body>\n</html>';
+
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = inp.name + '_사주리포트_대만신.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  showToast('💾 ' + inp.name + ' 님의 리포트를 저장했습니다!');
+}
+
+// ================================================
+//  요약 텍스트 클립보드 복사
+// ================================================
+function copySummary() {
+  if(!currentInput) { showToast('❌ 먼저 사주 분석을 실행해 주세요'); return; }
+  var inp = currentInput;
+  var yp=getYearPillar(inp.year,inp.month,inp.day);
+  var mp=getMonthPillar(inp.year,inp.month,inp.day);
+  var dp=getDayPillar(inp.year,inp.month,inp.day);
+  var hp=getHourPillar(dp.stem,inp.hour);
+  var sunSign=getSunSign(inp.month,inp.day);
+
+  var gStr = inp.gender==='M' ? '남성' : '여성';
+  var hStr = inp.hour<0 ? '시간 미상' : dp.stem+'일주';
+
+  var txt = '✦ 대만신(大萬神) 사주팔자 리포트 ✦\n';
+  txt += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  txt += '이름: ' + inp.name + ' (' + gStr + ')\n';
+  txt += '생년월일: ' + inp.year + '년 ' + inp.month + '월 ' + inp.day + '일\n';
+  txt += '\n📌 사주팔자 (四柱八字)\n';
+  txt += '  년주: ' + yp.stem + yp.branch + '\n';
+  txt += '  월주: ' + mp.stem + mp.branch + '\n';
+  txt += '  일주: ' + dp.stem + dp.branch + '\n';
+  if(inp.hour>=0) txt += '  시주: ' + hp.stem + hp.branch + '\n';
+  txt += '\n🌟 서양 점성술 태양궁: ' + sunSign.k + ' (' + sunSign.e + ')\n';
+  txt += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  txt += '대만신 사주 연구원 | 입춘 절기 기준 만세력';
+
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(function(){
+      showToast('📋 요약이 클립보드에 복사되었습니다!');
+    }).catch(function(){
+      fallbackCopy(txt);
+    });
+  } else {
+    fallbackCopy(txt);
+  }
+}
+
+function fallbackCopy(txt) {
+  var ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('📋 요약이 클립보드에 복사되었습니다!');
+  } catch(e) {
+    showToast('❌ 복사 실패 — 수동으로 선택해 주세요');
+  }
+  document.body.removeChild(ta);
+}
+
+// ================================================
+//  토스트 알림
+// ================================================
+var _toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  if(_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 
 
